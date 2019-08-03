@@ -1,0 +1,61 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="p-4 mt-5">
+    <div clas="container">
+      <div class="jumbotron">
+
+        <div class="row mb-2">
+          <div class="col-11" style="text-transform:uppercase; font-weight: bold;">
+            <h1>{{ actor.actor_name }}</h1>
+          </div>
+          <div class="col-1 float-right">
+            <p>ID : {{ actor.id }}</p>
+          </div>
+        </div>
+
+        <div class="row mb-2">
+
+        </div>
+
+        <hr class="my-2">
+
+        <div class="row mb-2">
+          <div class="col-6">
+            <p> Email : {{ actor.email }} </p>
+          </div>
+          <div class="col-6">
+            <p> Phone : {{ actor.phone }} </p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-6">
+            <p> Manufacturer : {{ actor.manufacturer }} </p>
+          </div>
+          <div class="col-6">
+            <p> Street : {{ adress.street }} </p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-6">
+            <p>City : {{ adress.city }}</p>
+          </div>
+          <div class="col-6">
+            <p>State : {{ adress.state }}</p>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-6">
+            <p> ZIP Code : {{ adress.zip_code }} </p>
+          </div>
+          <div class="col-6">
+            <p> Country : {{ adress.country }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

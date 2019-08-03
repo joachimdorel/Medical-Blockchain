@@ -1,0 +1,93 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="p-3">
+  <table class="table table-bordered table-hover">
+    <thead  class="thead-light">
+      <tr>
+        <th class="" scope="col">#</th>
+        <th class="" scope="col">Medicine Name</th>
+        <th class="" scope="col">GTIN</th>
+        <th class="" scope="col">Expiration Date</th>
+        <th class="" scope="col">Quantity</th>
+        <th class="" scope="col"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for medicine in medicines %}
+        <form class="form-horizontal" method="POST" action="{{ url_for('new_batch') }}">
+          <tr>
+            <td id="{{ medicine.medicine_id }}">{{ medicine.medicine_id }}</td>
+            <td>{{ medicine.medicine_name }}</td>
+            <td>{{ medicine.GTIN }}</td>
+            <input type="hidden" id="medicine_id" name="medicine_id" value="{{ medicine.medicine_id }}">
+            <td><input type="date" min="0" id="exp_date" name="exp_date"></td>
+            <td><input type="number" id="quantity" name="quantity"></td>
+            <td><input class="btn btn-info" role="button" type="submit" value="Add New Batch"></td>
+          </tr>
+        </form>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+  <!--
+  <div style="margin:20px">
+    {% for transaction in transactions %}
+      {% if transaction.sender_id != transaction.recipient_id %}
+        <div class="post_box">
+          <div class="post_box-header ">
+            <div class="name-header med_data">Medicine : {{transaction.med_id}}</div>
+            <div class="name-header send_data">{{transaction.sender_id}} → {{transaction.recipient_id}}</div>
+            <div class="name-header status_data"> Status : {{ transaction.status }}</div>
+            <div class="name-header time_data"> Send at <i>{{readable_time(transaction.timestamp)}}</i></div>
+          </div>
+        </div>
+      {% else %}
+        <div class="post_box">
+          <div class="post_box-header ">
+            <div class="name-header med_data">Medicine : {{transaction.med_id}}</div>
+            <div class="name-header send_data">New medicine added from {{transaction.sender_id}}</div>
+            <div class="name-header status_data"> Status : {{ transaction.status }}</div>
+            <div class="name-header time_data"> Send at <i>{{readable_time(transaction.timestamp)}}</i></div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+    -->
+
+    <style>
+      .post_box {
+          background: #fff;
+          padding: 20px 20px 20px 20px;
+          margin-top: 10px;
+          border-top: 1px solid #f0f0f0;
+          border-radius: 5px;
+      }
+      .med_data {
+          float: left;
+          text-align:left;
+          width:25%;
+      }
+      .send_data {
+          float: left;
+          text-align:center;
+          width:25%;
+      }
+      .time_data {
+          float: left;
+          text-align:right;
+          width:25%;
+      }
+      .status_data {
+          float: left;
+          text-align:right;
+          width:25%;
+      }
+    </style>
+  </div>
+
+{% endblock %}

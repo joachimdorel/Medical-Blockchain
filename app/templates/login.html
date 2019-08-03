@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <div class="text-center" style="display: flex; justify-content: center; align-items: center;">
+    <form class="form-signin w-25" action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <img class="mb-4" src="../static/img/logo.png" alt="" width="75" height="75" style="margin-top: 40px;">
+        <h1 class="h3 mb-3 font-weight-normal">Sign in</h1>
+
+        <input type="text" class="form-control m-2" id="actor_name" name="actor_name" placeholder="Name">
+        {% for error in form.actor_name.errors %}
+          <span style="color: red;">{{ error }}</span>
+        {% endfor %}
+
+	      <input type="password" class="form-control m-2" id="password" name="password" placeholder="Password">
+        {% for error in form.password.errors %}
+          <span style="color: red;">{{ error }}</span>
+        {% endfor %}
+
+        <div class="checkbox m-2">{{ form.remember_me() }} {{ form.remember_me.label }}</div>
+        <button class="btn btn-lg btn-primary btn-block m-2" type="submit">Sign in</button>
+
+        <p class="m-2 pl-3"><a href="{{ url_for('register') }}">Create an account</a></p>
+    </form>
+  </div>
+
+{% endblock %}

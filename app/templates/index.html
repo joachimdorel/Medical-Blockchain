@@ -1,0 +1,39 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+
+	 <div class="container-fluid text-right mt-3">
+		 <a href="/request_mine" ><button class="btn btn-primary">Request to mine</button></a>
+		 <a href="/"><button class="btn btn-primary">Resync</button></a>
+	 </div>
+
+	<div class="p-3">
+		<table class="table">
+		  <thead  class="thead-light">
+		    <tr>
+		      <th class="" scope="col">#</th>
+		      <th class="" scope="col">Transaction</th>
+		      <th class="" scope="col">Status</th>
+		      <th class="" scope="col">Time</th>
+		    </tr>
+		  </thead>
+		  <tbody>
+				{% for transaction in transactions %}
+					<tr>
+						<td>{{transaction.med_id}}</td>
+						{% if transaction.sender_id != transaction.recipient_id %}
+							<td>{{transaction.sender_id}} → {{transaction.recipient_id}}</td>
+						{% else %}
+							<td>New medicine added from {{transaction.sender_id}}</td>
+						{% endif %}
+						<td>{{ transaction.status }}</td>
+						<td>{{readable_time(transaction.timestamp)}}</td>
+					</tr>
+				{% endfor %}
+		  </tbody>
+		</table>
+	</div>
+
+</div>
+{% endblock %}

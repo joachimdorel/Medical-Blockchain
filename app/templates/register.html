@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="text-center pt-5" style="display: flex; justify-content: center; align-items: center;">
+  <form class="form-signin w-25" action="" method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <h1 class="h3 mb-3 font-weight-normal">Register</h1>
+
+      <input type="text" class="form-control m-2" id="actor_name" name="actor_name" placeholder="Name">
+      {% for error in form.actor_name.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="email" class="form-control m-2" id="email" name="email" placeholder="Email">
+      {% for error in form.email.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="text" class="form-control m-2" id="phone" name="phone" placeholder="Phone">
+      {% for error in form.phone.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <div class="checkbox m-2">{{ form.manufacturer() }} {{ form.manufacturer.label }}</div>
+
+      <input type="password" class="form-control m-2" id="password" name="password" placeholder="Password">
+      {% for error in form.password.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="password" class="form-control m-2" id="password2" name="password2" placeholder="Repeat your password">
+      {% for error in form.password2.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="text" class="form-control m-2" id="street" name="street" placeholder="Street">
+      {% for error in form.street.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="text" class="form-control m-2" id="city" name="city" placeholder="City">
+      {% for error in form.street.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="text" class="form-control m-2" id="state" name="state" placeholder="State">
+      {% for error in form.street.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="text" class="form-control m-2" id="zip_code" name="zip_code" placeholder="ZIP Code">
+      {% for error in form.street.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <input type="text" class="form-control m-2" id="country" name="country" placeholder="Country">
+      {% for error in form.street.errors %}
+        <span style="color: red;">{{ error }}</span>
+      {% endfor %}
+
+      <button class="btn btn-lg btn-primary btn-block m-2" type="submit">Register</button>
+  </form>
+</div>
+
+{% endblock %}

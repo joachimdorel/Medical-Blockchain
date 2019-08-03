@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <!-- Bootstrap meta-tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="utf-8">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- Personalized CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- JQuery -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="{{
+      url_for('static', filename='jquery.js') }}">\x3C/script>')</script>
+
+    <!-- DataTable -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/jq-3.3.1/dt-1.10.18/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/jq-3.3.1/dt-1.10.18/datatables.min.js"></script>
+
+
+    <title>{{ title }}</title>
+  </head>
+  <body>
+
+    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-4 bg-light border-bottom shadow-sm">
+      <h5 class="my-0 mr-md-auto font-weight-normal">
+        <a href="{{ url_for('index') }}">Home</a>
+      </h5>
+      <nav class="my-2 my-md-0 mr-md-3">
+        <a href="/request_mine" ><button class="btn btn-primary">Request to mine</button></a>
+        <a class="p-2 text-dark" href="{{ url_for('medicine') }}">Medicine Data</a>
+        {% if current_user.is_anonymous %}
+        {% else %}
+          <a class="p-2 text-dark" href="{{ url_for('actor', actor_name=current_user.actor_name) }}">Your Profile</a>
+          <a class="p-2 text-dark" href="{{ url_for('new_medicine') }}">New Medicine</a>
+          <a class="p-2 text-dark" href="{{ url_for('user_medicine') }}">Your Medicines</a>
+          <a class="p-2 text-dark" href="{{ url_for('user_transactions') }}">Your Transactions</a>
+        {% endif %}
+      </nav>
+      {% if current_user.is_anonymous %}
+        <a class="btn btn-outline-primary" href="{{ url_for('login') }}">Login</a>
+      {% else %}
+        <a class="btn btn-outline-primary" href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
+    </div>
+
+    {% with transactions = get_flashed_messages() %}
+    {% if transactions %}
+    <ul>
+    {% for transaction in transactions %}
+        <li>{{ transaction }} </li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+  </body>
+</html>

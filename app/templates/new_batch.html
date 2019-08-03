@@ -1,0 +1,28 @@
+<!-- extend base layout -->
+
+{% extends "base.html" %}
+
+{% block content %}
+<h1>New Medicine</h1>
+<div class="text-center pt-5" style="display: flex; justify-content: center; align-items: center;">
+  <form action="" method="post">
+      {{ form.hidden_tag() }}
+      <p>
+          {{ form.medicine_name.label }}<br>
+          {{ form.medicine_name(size=32) }}<br>
+          {% for error in form.medicine_name.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+      </p>
+      <p>
+          {{ form.gtin.label }}<br>
+          {{ form.gtin(size=32) }}<br>
+          {% for error in form.gtin.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+      </p>
+      <p>{{ form.submit() }}</p>
+  </form>
+</div>
+
+{% endblock %}
