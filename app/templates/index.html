@@ -9,31 +9,46 @@
 	 </div>
 
 	<div class="p-3">
-		<table class="table">
-		  <thead  class="thead-light">
-		    <tr>
-		      <th class="" scope="col">#</th>
-		      <th class="" scope="col">Transaction</th>
-		      <th class="" scope="col">Status</th>
-		      <th class="" scope="col">Time</th>
-		    </tr>
-		  </thead>
-		  <tbody>
-				{% for transaction in transactions %}
-					<tr>
-						<td>{{transaction.med_id}}</td>
-						{% if transaction.sender_id != transaction.recipient_id %}
-							<td>{{transaction.sender_id}} → {{transaction.recipient_id}}</td>
-						{% else %}
-							<td>New medicine added from {{transaction.sender_id}}</td>
-						{% endif %}
-						<td>{{ transaction.status }}</td>
-						<td>{{readable_time(transaction.timestamp)}}</td>
-					</tr>
-				{% endfor %}
-		  </tbody>
-		</table>
+		<table id="table" class="table table-hover table-bordered">
+	    <thead  class="thead-light">
+	      <tr>
+	        <th class="" scope="col">Medicine ID</th>
+	        <th class="" scope="col">Medicine Name</th>
+	        <th class="" scope="col">Batch ID</th>
+	        <th class="" scope="col">Quantity</th>
+	        <th class="" scope="col">Sender ID</th>
+	        <th class="" scope="col">Status</th>
+	        <th class="" scope="col">Date</th>
+	      </tr>
+	    </thead>
+	    <tbody id="myTable">
+	      {% for transaction in transactions %}
+	        <form class="form-horizontal" method="POST" action="{{ url_for('submit_accept_transaction') }}">
+	          <tr>
+	            <td>{{ transaction.medicine_id }}</td>
+	            <td class="med_name">{{ transaction.medicine_name }}</td>
+	            <td name="batch_id">{{ transaction.batch_id }}</td>
+	            <td name="batch_quantity">{{ transaction.quantity }}</td>
+	            <td name="sender_id">{{ transaction.sender_id }}</td>
+	             <td>{{ transaction.status }}</td>
+	             <td>{{ readable_time(transaction.timestamp) }}</td>
+	          </tr>
+	        </form>
+	      {% endfor %}
+	    </tbody>
+	  </table>
 	</div>
 
 </div>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#table').DataTable( {
+				"searching": false,
+				"info":     false,
+				order: [[ 6, 'desc' ]]
+		} );
+	} );
+
+</script>
 {% endblock %}

@@ -170,10 +170,10 @@ def new_transaction():
     response = {'message': 'Transaction will be added'}
     return jsonify(response), 201
 
-@app.route('/accept_transaction', methods=['POST'])
-def accept_transaction():
+@app.route('/response_transaction', methods=['POST'])
+def response_transaction():
     values = request.get_json()
-    required_fields = ["batch_id", "sender_id", "recipient_id", "status"]
+    required_fields = ["batch_id", "sender_id", "quantity", "recipient_id", "status"]
 
     if not all(k in values for k in required_fields):
         return 'Missing values', 400
@@ -196,7 +196,7 @@ def accept_transaction():
     values["timestamp"] = time.time()
     blockchain.add_new_transaction(values)
 
-    response = {'message': 'Transaction will be accepted by the receiver'}
+    response = {'message': 'Transaction response has been added to the blockchain'}
     return jsonify(response), 201
 
 

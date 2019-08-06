@@ -8,6 +8,8 @@ from app.forms import LoginForm, RegistrationForm, MedicineForm, BatchForm
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Actor, Medicine, Adress, Batch
 
+from sqlalchemy.exc import IntegrityError
+
 # The node with which our application interacts, there can be multiple
 # such nodes as well.
 CONNECTED_NODE_ADDRESS = "http://127.0.0.1:8000/"
@@ -63,6 +65,39 @@ def fetch_transactions_without_double():
         global transactions
         transactions = sorted(chain_content_cp, key=lambda k: k['timestamp'], reverse=True)
 
+def fetch_current_actor_transactions():
+    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(get_chain_address)
+    if response.status_code == 200:
+        transactions_actor=[]
+        data_transactions=[]
+        chain = json.loads(response.content)
+        for element in chain["chain"]:
+            for transaction_elem in element["transactions"]:
+                data_transactions.append(transaction_elem)
+
+        current_transactions = sorted(data_transactions, key=lambda k: k['timestamp'], reverse=True)
+
+        batch_with_owner = []
+
+        for t in current_transactions:
+            batch_have_owner = False
+            for b in batch_with_owner:
+                if b['batch_id'] == t['batch_id']:
+                    batch_have_owner = True
+
+            if not batch_have_owner:
+                if t['status'] == "accepted" or t['status'] == "waiting":
+                    if t['recipient_id'] == current_user.id:
+                        transactions_actor.append(t)
+                if t['status'] == "refused":
+                    if t['sender_id'] == current_user.id:
+                        transactions_actor.append(t)
+                batch_with_owner.append(t)
+
+        global transactions
+        transactions = sorted(transactions_actor, key=lambda k: k['timestamp'], reverse=True)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -72,7 +107,6 @@ def login():
             flash('Invalid actor name or password')
             return redirect(url_for('login'))
 
-        login_user(actor, remember=form.remember_me.data)
         login_user(actor, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -100,7 +134,10 @@ def register():
         db.session.add(adress)
         db.session.commit()
         flash('Congratulations, you are now registered!')
-        return redirect(url_for('login'))
+
+        login_user(actor, remember=True)
+
+        return redirect(url_for('index'))
     return render_template('register.html', title='Register', form=form)
 
 @app.route('/')
@@ -125,11 +162,15 @@ def medicine():
     medicine_transaction = []
     owner = None
 
+    flash("Does not work yet")
     for transaction in transactions:
+        pass
+        '''
         if transaction['batch_id'] == int(batch_id):
             if owner == None and transaction["status"] == "accepted":
                 owner=transaction["recipient_id"]
             medicine_transaction.append(transaction)
+        '''
 
     data = {}
     data["owner"] = owner
@@ -159,7 +200,6 @@ def user_medicine():
     fetch_transactions_without_double()
 
     medicines = Medicine.query.filter_by(manufacturer_id=current_user.id).all()
-    print(medicines)
 
     #blockchain
     user_id = current_user.id
@@ -189,6 +229,10 @@ def request_mine():
     response = requests.get(mine_address)
 
     return redirect(url_for('index'))
+
+def mine_blockchain():
+    mine_address = "{}mine".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(mine_address)
 
 @app.route('/fetch_transactions_for_id', methods=['POST'])
 @login_required
@@ -230,22 +274,25 @@ def new_medicine():
     form = MedicineForm()
 
     if form.validate_on_submit():
-        medicine = Medicine(medicine_name=form.medicine_name.data, GTIN=form.gtin.data, manufacturer_id=current_user.id)
-        db.session.add(medicine)
-        db.session.flush()
-        db.session.commit()
+        try:
+            medicine = Medicine(medicine_name=form.medicine_name.data, GTIN=form.gtin.data, manufacturer_id=current_user.id)
+            db.session.add(medicine)
+            db.session.flush()
+            db.session.commit()
 
-        # Blockchain part
-        post_object = {
-            'med_id': medicine.medicine_id,
-            'sender_id': current_user.id
-        }
-        flash('New medicine added!')
-        new_medicine_address = "{}register_medicine".format(CONNECTED_NODE_ADDRESS)
+            # Blockchain part
+            post_object = {
+                'med_id': medicine.medicine_id,
+                'sender_id': current_user.id
+            }
+            flash('New medicine added!')
+            new_medicine_address = "{}register_medicine".format(CONNECTED_NODE_ADDRESS)
 
-        requests.post(new_medicine_address,
-                      json=post_object,
-                      headers={'Content-type': 'application/json'})
+            requests.post(new_medicine_address,
+                          json=post_object,
+                          headers={'Content-type': 'application/json'})
+        except IntegrityError:
+            flash('This medicine already exist.')
         return redirect(url_for('new_medicine'))
     return render_template('new_medicine.html', title='New Medicine', form=form)
 
@@ -279,37 +326,46 @@ def new_batch():
 @app.route('/send_batch', methods=['POST'])
 @login_required
 def send_batch():
+    fetch_current_actor_transactions()
     if request.method == 'POST':
         if request.form['batch_id']=='' or request.form['recipient_id']=='':
             flash('Missing data')
         else:
-            json_object = {
-                'batch_id': int(request.form['batch_id']),
-                'sender_id': int(current_user.id),
-                'recipient_id': int(request.form['recipient_id']),
-                'quantity': int(Batch.query.filter_by(batch_id=request.form['batch_id']).first().quantity)
-            }
-            new_transaction_address = "{}new_transaction".format(CONNECTED_NODE_ADDRESS)
-            response = requests.post(   new_transaction_address,
-                                        json=json_object,
-                                        headers={'Content-type': 'application/json'})
+            user_owner_batch = False
 
+            for t in transactions:
+                if int(request.form['batch_id']) == int(t['batch_id']):
+                    user_owner_batch = True
+
+            if user_owner_batch:
+                json_object = {
+                    'batch_id': int(request.form['batch_id']),
+                    'sender_id': int(current_user.id),
+                    'recipient_id': int(request.form['recipient_id']),
+                    'quantity': int(Batch.query.filter_by(batch_id=request.form['batch_id']).first().quantity)
+                }
+                new_transaction_address = "{}new_transaction".format(CONNECTED_NODE_ADDRESS)
+                response = requests.post(   new_transaction_address,
+                                            json=json_object,
+                                            headers={'Content-type': 'application/json'})
+
+            else:
+                flash('You are not the owner of the batch')
             return redirect(url_for('user_transactions'))
+
 
 @app.route('/user_transactions')
 @login_required
 def user_transactions():
-    fetch_transactions_without_double()
+    fetch_current_actor_transactions()
 
     user_transactions = []
     for transaction in transactions:
 
-        transaction.update( {'med_id': 1000} )
         medicine = Medicine.query.filter_by(medicine_id=Batch.query.filter_by(batch_id=transaction['batch_id']).first().medicine_id).first()
         transaction.update( {'medicine_name': medicine.medicine_name, 'medicine_id': medicine.medicine_id} )
 
-        if transaction['recipient_id']==current_user.id:
-            user_transactions.append(transaction)
+        user_transactions.append(transaction)
 
     return render_template('user_transactions.html',
                            title='List of yours transactions',
@@ -325,24 +381,25 @@ def submit_accept_transaction():
     """
     Endpoint to the confirmation of a transaction in the blockchain
     """
-    med_id = request.form["med_id"]
-    recipient_id = request.form["recipient_id"]
-    status = request.form["status"]
+    if request.method == 'POST':
+        json_object = {
+            'batch_id': int(request.form['batch_id']),
+            'sender_id': int(request.form['sender_id']),
+            'recipient_id': int(current_user.id),
+            'quantity': int(request.form['quantity']),
+            'status': request.form['statusTransaction']
+        }
 
-    post_object = {
-        'med_id': med_id,
-        'sender_id': current_user.id,
-        'recipient_id': recipient_id,
-        'status': status
-    }
 
-    accept_transaction = "{}accept_transaction".format(CONNECTED_NODE_ADDRESS)
+        submit_accept_transaction = "{}response_transaction".format(CONNECTED_NODE_ADDRESS)
 
-    requests.post(accept_transaction,
-                  json=post_object,
-                  headers={'Content-type': 'application/json'})
+        requests.post(submit_accept_transaction,
+                      json=json_object,
+                      headers={'Content-type': 'application/json'})
 
-    return redirect(url_for('index'))
+        mine_blockchain()
+
+        return redirect(url_for('user_transactions'))
 
 
 def timestamp_to_string(epoch_time):

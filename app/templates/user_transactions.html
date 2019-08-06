@@ -9,7 +9,7 @@
       <tr>
         <td><input type="number" id="batch_id" name="batch_id" placeholder="Batch ID"></td>
         <td><input type="number" id="recipient_id" name="recipient_id" placeholder="Recipient ID"></td>
-        <td><input class="btn btn-info" role="button" type="submit" value="Send Batch"></td>
+        <td><input class="btn btn-primary" role="button" type="submit" value="Send Batch"></td>
       </tr>
     </form>
   </div>
@@ -18,14 +18,17 @@
 
 <div class="pr-3 pl-3 pb-3">
   <div class="row pb-3">
-    <div class="col-3">
-      <input class="form-control" id="nameInput" type="text" placeholder="Search by name" onkeyup="filterByName()">
-    </div>
-    <div class="col-3">
+    <div class="col-2">
       <input class="form-control" id="idInput" type="text" placeholder="Search by ID" onkeyup="filterByID()">
     </div>
     <div class="col-3">
+      <input class="form-control" id="nameInput" type="text" placeholder="Search by Medicine Name" onkeyup="filterByName()">
+    </div>
+    <div class="col-2">
       <input class="form-control" id="batchInput" type="text" placeholder="Search by Batch ID" onkeyup="filterByBatch()">
+    </div>
+    <div class="col-2">
+      <input class="form-control" id="senderIDInput" type="text" placeholder="Search by Sender ID" onkeyup="filterBySenderID()">
     </div>
     <div class="col-3">
       <input class="form-control" id="statusInput" type="text" placeholder="Search by Status" onkeyup="filterByStatus()">
@@ -39,20 +42,38 @@
         <th class="" scope="col">Medicine Name</th>
         <th class="" scope="col">Batch ID</th>
         <th class="" scope="col">Quantity</th>
+        <th class="" scope="col">Sender ID</th>
         <th class="" scope="col">Status</th>
         <th class="" scope="col">Date</th>
+        <th class="" scope="col">Confirm</th>
       </tr>
     </thead>
     <tbody id="myTable">
       {% for transaction in transactions %}
-      <form class="form-horizontal" method="POST" action="">
+        <form class="form-horizontal" method="POST" action="{{ url_for('submit_accept_transaction') }}">
           <tr>
             <td>{{ transaction.medicine_id }}</td>
             <td class="med_name">{{ transaction.medicine_name }}</td>
-            <td>{{ transaction.batch_id }}</td>
-            <td>{{ transaction.quantity }}</td>
-            <td>{{ transaction.status }}</td>
-            <td>{{readable_time(transaction.timestamp)}}</td>
+            <td name="batch_id">{{ transaction.batch_id }}</td>
+            <td name="batch_quantity">{{ transaction.quantity }}</td>
+            <td name="sender_id">{{ transaction.sender_id }}</td>
+            {% if transaction.status == "waiting" %}
+              <input type="hidden" name="sender_id" value="{{ transaction.sender_id }}">
+              <input type="hidden" name="batch_id" value="{{ transaction.batch_id }}">
+              <input type="hidden" name="quantity" value="{{ transaction.quantity }}">
+              <td>
+                <select name="statusTransaction">
+                  <option value="accepted">Accept</option>
+                  <option value="refused">Refuse</option>
+                </select>
+              </td>
+              <td>{{readable_time(transaction.timestamp)}}</td>
+              <td><input class="btn btn-primary" role="button" type="submit" value="Confirm"></td>
+            {% else %}
+              <td>{{ transaction.status }}</td>
+              <td>{{ readable_time(transaction.timestamp) }}</td>
+              <td></td>
+            {% endif %}
           </tr>
         </form>
       {% endfor %}
@@ -62,12 +83,16 @@
 
 <script type="text/javascript">
 
+  /*
+  To put an ordering list on the table
   $(document).ready(function() {
     $('#table').DataTable( {
         "searching": false,
-        "info":     false
+        "info":     false,
+        order: [[ 6, 'desc' ]]
     } );
-} );
+  } );
+  */
 
   function filterByID() {
     var input, filter, table, tr, td, i, txtValue;
@@ -127,9 +152,9 @@
     }
   }
 
-  function filterByStatus() {
+  function filterBySenderID() {
     var input, filter, table, tr, td, i, txtValue;
-    input = document.getElementById("statusInput");
+    input = document.getElementById("senderIDInput");
     filter = input.value.toUpperCase();
     table = document.getElementById("table");
     tr = table.getElementsByTagName("tr");
@@ -146,14 +171,14 @@
     }
   }
 
-  function filterByBatch() {
+  function filterByStatus() {
     var input, filter, table, tr, td, i, txtValue;
-    input = document.getElementById("batchInput");
+    input = document.getElementById("statusInput");
     filter = input.value.toUpperCase();
     table = document.getElementById("table");
     tr = table.getElementsByTagName("tr");
     for (i = 1; i < tr.length; i++) {
-      td = tr[i].getElementsByTagName("td")[2];
+      td = tr[i].getElementsByTagName("td")[5];
       if (td) {
         txtValue = td.textContent || td.innerText;
         if (txtValue.toUpperCase().indexOf(filter) > -1) {
