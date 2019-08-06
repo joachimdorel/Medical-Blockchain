@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from hubarcode.datamatrix import DataMatrixEncoder
 import requests
 from flask import render_template, redirect, request, flash, url_for
 from app import app, db
@@ -36,6 +37,7 @@ def fetch_transactions():
 
         global transactions
         transactions = sorted(chain_content, key=lambda k: k['timestamp'], reverse=True)
+        return transactions
 
 def fetch_transactions_without_double():
     """
@@ -98,6 +100,24 @@ def fetch_current_actor_transactions():
         global transactions
         transactions = sorted(transactions_actor, key=lambda k: k['timestamp'], reverse=True)
 
+def fetch_batch_transactions(batch_id):
+    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(get_chain_address)
+    if response.status_code == 200:
+        transactions_batch = []
+        chain = json.loads(response.content)
+
+
+        for element in chain["chain"]:
+            for transaction in element["transactions"]:
+                print("Fetching the batch transactions")
+                if int(transaction["batch_id"]) == int(batch_id):
+                    transactions_batch.append(transaction)
+
+        transactions_batch = sorted(transactions_batch, key=lambda k: k['timestamp'], reverse=True)
+
+        return transactions_batch
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -142,7 +162,11 @@ def register():
 
 @app.route('/')
 def index():
-    fetch_transactions()
+    transactions = fetch_transactions()
+    for transaction in transactions:
+        medicine = Medicine.query.filter_by(medicine_id=Batch.query.filter_by(batch_id=transaction['batch_id']).first().medicine_id).first()
+        transaction.update( {'medicine_name': medicine.medicine_name, 'medicine_id': medicine.medicine_id} )
+
     return render_template('index.html',
                            title='Medical Blockchain',
                            transactions=transactions,
@@ -190,6 +214,21 @@ def actor(actor_name):
     adress = Adress.query.filter_by(id=actor.id).first()
     return render_template('actor.html', title=actor.actor_name, actor=actor, adress=adress)
 
+
+@app.route('/batch/<batch_id>')
+@login_required
+def batch(batch_id):
+    datamatrix_data = datamatrix(batch_id)
+    transactions = fetch_batch_transactions(batch_id)
+
+    batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
+    medicine = Medicine.query.filter_by(medicine_id=batch.medicine_id).first()
+    return render_template( 'batch.html',
+                            title="Batch: " + str(batch.batch_id),
+                            medicine=medicine, batch=batch,
+                            transactions=transactions,
+                            readable_time=timestamp_to_string,
+                            datamatrix_data=datamatrix_data)
 
 @app.route('/user_medicine')
 @login_required
@@ -368,7 +407,7 @@ def user_transactions():
         user_transactions.append(transaction)
 
     return render_template('user_transactions.html',
-                           title='List of yours transactions',
+                           title='Manage yours transactions',
                            transactions=user_transactions,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string,
@@ -401,9 +440,31 @@ def submit_accept_transaction():
 
         return redirect(url_for('user_transactions'))
 
-
 def timestamp_to_string(epoch_time):
     """
     Convert the timestamp to a readable string
     """
     return datetime.datetime.fromtimestamp(epoch_time).strftime('%H:%M:%S - %d/%m/%Y')
+
+def datamatrix(batch_id):
+    batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
+    medicine = Medicine.query.filter_by(medicine_id=batch.medicine_id).first()
+
+    balise01 = "ASCII232"
+    balise02 = "ASCII29"
+
+    gtin = medicine.GTIN
+    exp_date = batch.exp_date
+    lot = batch.batch_id
+    free_data = ""
+
+    data = str(balise01) + "01" + str(gtin) + "17" + str(exp_date) + "10" + str(lot) + str(balise02) + "91" + str(free_data)
+
+    datamatrix_data = DataMatrixEncoder(data)
+    datamatrix_data.save("app/static/img/datamatrix/"+ str(data) + ".png")
+
+    return data
+
+def getDataFromDatamatrix(datamatrix):
+
+    return 1

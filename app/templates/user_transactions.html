@@ -5,13 +5,15 @@
 
 <div class="pt-3 text-center">
   <div class="container">
-    <form class="form-horizontal" method="POST" action="{{ url_for('send_batch') }}">
-      <tr>
+    <tr>
+    <form class="form-horizontal top-form" method="POST" action="{{ url_for('send_batch') }}">
         <td><input type="number" id="batch_id" name="batch_id" placeholder="Batch ID"></td>
         <td><input type="number" id="recipient_id" name="recipient_id" placeholder="Recipient ID"></td>
         <td><input class="btn btn-primary" role="button" type="submit" value="Send Batch"></td>
-      </tr>
     </form>
+    <td><button class="btn btn-primary" role="button" onclick="filterWaitingBatch()">Filter the Waiting Batches</button></td>
+    <td><button class="btn btn-primary" role="button" onclick="showAllBatches()">Show All the Batches</button></td>
+  </tr>
   </div>
 </div>
 <hr>
@@ -54,9 +56,10 @@
           <tr>
             <td>{{ transaction.medicine_id }}</td>
             <td class="med_name">{{ transaction.medicine_name }}</td>
-            <td name="batch_id">{{ transaction.batch_id }}</td>
+            <td name="batch_id"><a href="{{ url_for('batch', batch_id=transaction.batch_id) }}">{{ transaction.batch_id }}</a></td>
             <td name="batch_quantity">{{ transaction.quantity }}</td>
             <td name="sender_id">{{ transaction.sender_id }}</td>
+            <td style="display:none;" name="status">{{ transaction.status }}</td>
             {% if transaction.status == "waiting" %}
               <input type="hidden" name="sender_id" value="{{ transaction.sender_id }}">
               <input type="hidden" name="batch_id" value="{{ transaction.batch_id }}">
@@ -82,6 +85,32 @@
 </div>
 
 <script type="text/javascript">
+
+  function filterWaitingBatch(){
+    filter = "waiting".toUpperCase();
+    table = document.getElementById("table");
+    tr = table.getElementsByTagName("tr");
+    for (i = 1; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[5];
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+
+  function showAllBatches(){
+    table = document.getElementById("table");
+    tr = table.getElementsByTagName("tr");
+    for (i = 1; i < tr.length; i++) {
+      tr[i].style.display = "";
+    }
+
+  }
 
   /*
   To put an ordering list on the table
@@ -178,7 +207,7 @@
     table = document.getElementById("table");
     tr = table.getElementsByTagName("tr");
     for (i = 1; i < tr.length; i++) {
-      td = tr[i].getElementsByTagName("td")[5];
+      td = tr[i].getElementsByTagName("td")[6];
       if (td) {
         txtValue = td.textContent || td.innerText;
         if (txtValue.toUpperCase().indexOf(filter) > -1) {
@@ -189,19 +218,12 @@
       }
     }
   }
-
-
-  /*
-  $(document).ready(function(){
-    $("#myInput").on("keyup", function() {
-      var value = $(this).val().toLowerCase();
-      $("#myTable tr").filter(function() {
-        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-      });
-    });
-  });
-  */
-
 </script>
+
+<style media="screen">
+  .top-form{
+    display:inline
+  }
+</style>
 
 {% endblock %}

@@ -36,7 +36,7 @@
           <a class="p-2 text-dark" href="{{ url_for('actor', actor_name=current_user.actor_name) }}">Your Profile</a>
           <a class="p-2 text-dark" href="{{ url_for('new_medicine') }}">New Medicine</a>
           <a class="p-2 text-dark" href="{{ url_for('user_medicine') }}">Your Medicines</a>
-          <a class="p-2 text-dark" href="{{ url_for('user_transactions') }}">Your Transactions</a>
+          <a class="p-2 text-dark" href="{{ url_for('user_transactions') }}">Manage Transactions</a>
         {% endif %}
       </nav>
       {% if current_user.is_anonymous %}

@@ -17,6 +17,7 @@
 	        <th class="" scope="col">Batch ID</th>
 	        <th class="" scope="col">Quantity</th>
 	        <th class="" scope="col">Sender ID</th>
+					<th class="" scope="col">Recipient ID</th>
 	        <th class="" scope="col">Status</th>
 	        <th class="" scope="col">Date</th>
 	      </tr>
@@ -29,9 +30,16 @@
 	            <td class="med_name">{{ transaction.medicine_name }}</td>
 	            <td name="batch_id">{{ transaction.batch_id }}</td>
 	            <td name="batch_quantity">{{ transaction.quantity }}</td>
-	            <td name="sender_id">{{ transaction.sender_id }}</td>
-	             <td>{{ transaction.status }}</td>
-	             <td>{{ readable_time(transaction.timestamp) }}</td>
+							{% if transaction.sender_id == transaction.recipient_id %}
+							<td>Batch created</td>
+							<td>{{ transaction.recipient_id }}</td>
+							<td>created</td>
+							{% else %}
+							<td name="sender_id">{{ transaction.sender_id }}</td>
+							<td>{{ transaction.recipient_id }}</td>
+							<td>{{ transaction.status }}</td>
+							{% endif %}
+	            <td>{{ readable_time(transaction.timestamp) }}</td>
 	          </tr>
 	        </form>
 	      {% endfor %}
@@ -46,9 +54,9 @@
 		$('#table').DataTable( {
 				"searching": false,
 				"info":     false,
-				order: [[ 6, 'desc' ]]
+				order: [[ 7, 'desc' ]]
 		} );
 	} );
-
 </script>
+
 {% endblock %}

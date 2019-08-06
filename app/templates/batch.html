@@ -1,0 +1,52 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+
+<div><img src="../static/img/datamatrix/{{ datamatrix_data }}.png"></div>
+
+<p>{{ transactions[1].batch_id }}</p>
+<p>{{ medicine.medicine_id }}</p>
+<p>{{ medicine.medicine_name }}</p>
+<p>{{ transactions[1].quantity }}
+
+
+
+
+<div class="p-3">
+ <table id="table" class="table table-hover table-bordered">
+   <thead  class="thead-light">
+     <tr>
+       <th class="" scope="col">Sender ID</th>
+       <th class="" scope="col">Recipient ID</th>
+       <th class="" scope="col">Status</th>
+       <th class="" scope="col">Date</th>
+     </tr>
+   </thead>
+   <tbody id="myTable">
+     {% for transaction in transactions %}
+         <tr>
+           <td>{{ transaction.sender_id }}</td>
+           <td>{{ transaction.recipient_id }}</td>
+           <td>{{ transaction.status }}</td>
+           <td>{{ readable_time(transaction.timestamp) }}</td>
+         </tr>
+     {% endfor %}
+   </tbody>
+ </table>
+</div>
+
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+ $('#table').DataTable( {
+     "searching": false,
+     "info":     false,
+     order: [[ 7, 'desc' ]]
+ } );
+} );
+</script>
+
+
+{% endblock %}
