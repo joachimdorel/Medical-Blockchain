@@ -3,15 +3,20 @@
 
 {% block content %}
 
-<div><img src="../static/img/datamatrix/{{ datamatrix_data }}.png"></div>
-
-<p>{{ transactions[1].batch_id }}</p>
-<p>{{ medicine.medicine_id }}</p>
-<p>{{ medicine.medicine_name }}</p>
-<p>{{ transactions[1].quantity }}
-
-
-
+<div class="card mb-3 m-3" style="max-width: 540px;">
+  <div class="row no-gutters">
+    <div class="col-md-3" style="max-height:500px;">
+      <img src="../static/img/datamatrix/{{ datamatrix_data }}.png" class="card-img" alt="...">
+    </div>
+    <div class="col-md-9">
+      <div class="card-body">
+        <h5 class="card-title">Batch {{ transactions[0].batch_id }}</h5>
+        <p class="card-text"><span style="font-weight:bold;">Medicine</span>: {{ medicine.medicine_name }} [ ID number: {{ medicine.medicine_id }} ]</p>
+        <p class="card-text"><span style="font-weight:bold;">Quantity</span>: {{ transactions[0].quantity }}</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="p-3">
  <table id="table" class="table table-hover table-bordered">

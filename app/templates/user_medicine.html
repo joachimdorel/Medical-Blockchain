@@ -3,6 +3,18 @@
 
 {% block content %}
 
+<div class="pt-3 float-right ">
+  <div class="container">
+    <tr>
+    <form class="form-horizontal top-form" method="POST" action="{{ url_for('new_medicine') }}">
+        <td><input type="string" id="medicineNameInput" name="medicine_name" placeholder="Medicine Name"></td>
+        <td><input type="number" id="gtinInput" name="GTIN" placeholder="GTIN Number"></td>
+        <td><input class="btn btn-primary" role="button" type="submit" value="Add New Medicine"></td>
+    </form>
+  </tr>
+  </div>
+</div>
+
 <div class="p-3">
   <table class="table table-bordered table-hover">
     <thead  class="thead-light">

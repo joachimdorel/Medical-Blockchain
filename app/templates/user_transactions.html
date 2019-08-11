@@ -11,7 +11,7 @@
         <td><input type="number" id="recipient_id" name="recipient_id" placeholder="Recipient ID"></td>
         <td><input class="btn btn-primary" role="button" type="submit" value="Send Batch"></td>
     </form>
-    <td><button class="btn btn-primary" role="button" onclick="filterWaitingBatch()">Filter the Waiting Batches</button></td>
+    <td><button class="btn btn-primary separator_left ml-2 pl-2" role="button" onclick="filterWaitingBatch()">Filter the Waiting Batches</button></td>
     <td><button class="btn btn-primary" role="button" onclick="showAllBatches()">Show All the Batches</button></td>
   </tr>
   </div>
@@ -24,7 +24,7 @@
       <input class="form-control" id="idInput" type="text" placeholder="Search by ID" onkeyup="filterByID()">
     </div>
     <div class="col-3">
-      <input class="form-control" id="nameInput" type="text" placeholder="Search by Medicine Name" onkeyup="filterByName()">
+      <input class="form-control" id="medicineNameInput" type="text" placeholder="Search by Medicine Name" onkeyup="filterByName()">
     </div>
     <div class="col-2">
       <input class="form-control" id="batchInput" type="text" placeholder="Search by Batch ID" onkeyup="filterByBatch()">
@@ -86,6 +86,17 @@
 
 <script type="text/javascript">
 
+  /*
+  To put an ordering list on the table
+  $(document).ready(function() {
+    $('#table').DataTable( {
+        "searching": false,
+        "info":     false,
+        order: [[ 6, 'desc' ]]
+    } );
+  } );
+  */
+
   function filterWaitingBatch(){
     filter = "waiting".toUpperCase();
     table = document.getElementById("table");
@@ -109,19 +120,9 @@
     for (i = 1; i < tr.length; i++) {
       tr[i].style.display = "";
     }
-
   }
 
-  /*
-  To put an ordering list on the table
-  $(document).ready(function() {
-    $('#table').DataTable( {
-        "searching": false,
-        "info":     false,
-        order: [[ 6, 'desc' ]]
-    } );
-  } );
-  */
+  // --- Functions for the differents filters ---
 
   function filterByID() {
     var input, filter, table, tr, td, i, txtValue;
@@ -144,7 +145,7 @@
 
   function filterByName() {
     var input, filter, table, tr, td, i, txtValue;
-    input = document.getElementById("nameInput");
+    input = document.getElementById("medicineNameInput");
     filter = input.value.toUpperCase();
     table = document.getElementById("table");
     tr = table.getElementsByTagName("tr");
@@ -160,7 +161,6 @@
       }
     }
   }
-
 
   function filterByBatch() {
     var input, filter, table, tr, td, i, txtValue;
@@ -218,11 +218,17 @@
       }
     }
   }
+
 </script>
 
 <style media="screen">
   .top-form{
     display:inline
+  }
+
+  .separator_left{
+    border-left: 1px solid #909090;
+    border-spacing: 2em;
   }
 </style>
 

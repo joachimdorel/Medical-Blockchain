@@ -174,8 +174,8 @@ def index():
                            readable_time=timestamp_to_string,
                            errors=errors)
 
-@app.route('/medicine')
-def medicine():
+@app.route('/batch_info')
+def batch_info():
     """
     List the data of a specific medicine
     """
@@ -198,7 +198,7 @@ def medicine():
 
     data = {}
     data["owner"] = owner
-    return render_template('medicine.html',
+    return render_template('batch_info.html',
                            title='Data of a particular medicine',
                            transactions=medicine_transaction,
                            node_address=CONNECTED_NODE_ADDRESS,
@@ -216,7 +216,6 @@ def actor(actor_name):
 
 
 @app.route('/batch/<batch_id>')
-@login_required
 def batch(batch_id):
     datamatrix_data = datamatrix(batch_id)
     transactions = fetch_batch_transactions(batch_id)
@@ -310,30 +309,21 @@ def new_medicine():
     """
     Endpoint to add a new medicine to the blockchain
     """
-    form = MedicineForm()
 
-    if form.validate_on_submit():
-        try:
-            medicine = Medicine(medicine_name=form.medicine_name.data, GTIN=form.gtin.data, manufacturer_id=current_user.id)
-            db.session.add(medicine)
-            db.session.flush()
-            db.session.commit()
+    if request.method == 'POST':
+        if request.form['medicine_name']=='' or request.form['GTIN']=='':
+            flash('Missing data')
+        else:
+            try:
+                medicine=Medicine(medicine_name=request.form['medicine_name'], GTIN=request.form['GTIN'], manufacturer_id=current_user.id)
+                db.session.add(medicine)
+                db.session.commit()
+            except IntegrityError:
+                flash('This medicine already exist.')
 
-            # Blockchain part
-            post_object = {
-                'med_id': medicine.medicine_id,
-                'sender_id': current_user.id
-            }
-            flash('New medicine added!')
-            new_medicine_address = "{}register_medicine".format(CONNECTED_NODE_ADDRESS)
+                return redirect(url_for('user_medicine'))
 
-            requests.post(new_medicine_address,
-                          json=post_object,
-                          headers={'Content-type': 'application/json'})
-        except IntegrityError:
-            flash('This medicine already exist.')
-        return redirect(url_for('new_medicine'))
-    return render_template('new_medicine.html', title='New Medicine', form=form)
+    return redirect(url_for('user_medicine'))
 
 @app.route('/new_batch', methods=['POST'])
 @login_required
@@ -444,7 +434,7 @@ def timestamp_to_string(epoch_time):
     """
     Convert the timestamp to a readable string
     """
-    return datetime.datetime.fromtimestamp(epoch_time).strftime('%H:%M:%S - %d/%m/%Y')
+    return datetime.datetime.fromtimestamp(epoch_time).strftime('%d/%m/%Y - %H:%M:%S')
 
 def datamatrix(batch_id):
     batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
