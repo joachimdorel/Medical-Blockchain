@@ -20,7 +20,7 @@
 
 <div class="pr-3 pl-3 pb-3">
   <div class="row pb-3">
-    <div class="col-2">
+    <div class="col-3">
       <input class="form-control" id="idInput" type="text" placeholder="Search by ID" onkeyup="filterByID()">
     </div>
     <div class="col-3">
@@ -32,8 +32,13 @@
     <div class="col-2">
       <input class="form-control" id="senderIDInput" type="text" placeholder="Search by Sender ID" onkeyup="filterBySenderID()">
     </div>
-    <div class="col-3">
-      <input class="form-control" id="statusInput" type="text" placeholder="Search by Status" onkeyup="filterByStatus()">
+    <div class="col-2">
+      <select onchange="filterByStatus()" id="statusInput">
+        <option value="all">All Transactions</option>
+        <option value="accepted">Accepted</option>
+        <option value="refused">Refused</option>
+        <option value="waiting">Waiting</option>
+      </select>
     </div>
     <br>
   </div>
@@ -201,23 +206,30 @@
   }
 
   function filterByStatus() {
-    var input, filter, table, tr, td, i, txtValue;
-    input = document.getElementById("statusInput");
-    filter = input.value.toUpperCase();
-    table = document.getElementById("table");
-    tr = table.getElementsByTagName("tr");
-    for (i = 1; i < tr.length; i++) {
-      td = tr[i].getElementsByTagName("td")[6];
-      if (td) {
-        txtValue = td.textContent || td.innerText;
-        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-          tr[i].style.display = "";
-        } else {
-          tr[i].style.display = "none";
-        }
-      }
-    }
-  }
+		var input, filter, table, tr, td, i, txtValue;
+		input = document.getElementById("statusInput");
+		filter = input.value.toUpperCase();
+		table = document.getElementById("table");
+		tr = table.getElementsByTagName("tr");
+		if(filter=="ALL") {
+			for (i = 1; i < tr.length; i++) {
+				console.log("All selected")
+				tr[i].style.display = "";
+			}
+		}else{
+			for (i = 1; i < tr.length; i++) {
+				td = tr[i].getElementsByTagName("td")[6];
+				if (td) {
+					txtValue = td.textContent || td.innerText;
+					if (txtValue.toUpperCase().indexOf(filter) > -1) {
+						tr[i].style.display = "";
+					} else {
+						tr[i].style.display = "none";
+					}
+				}
+			}
+		}
+	}
 
 </script>
 

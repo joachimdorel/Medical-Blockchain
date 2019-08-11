@@ -7,7 +7,7 @@
 			<div class="col-3">
 				<input class="form-control" id="medicineNameInput" type="text" placeholder="Search by Medicine Name" onkeyup="filterByMedecineName()">
 			</div>
-			<div class="col-2">
+			<div class="col-3">
 				<input class="form-control" id="batchInput" type="text" placeholder="Search by Batch ID" onkeyup="filterByBatchID()">
 			</div>
 			<div class="col-2">
@@ -16,8 +16,13 @@
 			<div class="col-2">
 				<input class="form-control" id="recipientIDInput" type="text" placeholder="Search by Recipient ID" onkeyup="filterByRecipientID()">
 			</div>
-			<div class="col-3">
-				<input class="form-control" id="statusInput" type="text" placeholder="Search by Status" onkeyup="filterByStatus()">
+			<div class="col-2">
+		  	<select onchange="filterByStatus()" id="statusInput">
+		      <option value="all">All Transactions</option>
+		      <option value="accepted">Accepted</option>
+		      <option value="refused">Refused</option>
+		    	<option value="waiting">Waiting</option>
+		  	</select>
 			</div>
 		</div>
 	</div>
@@ -48,7 +53,7 @@
 							{% if transaction.sender_id == transaction.recipient_id %}
 							<td>Batch created</td>
 							<td>{{ transaction.recipient_id }}</td>
-							<td>created</td>
+							<td>{{ transaction.status }}</td>
 							{% else %}
 							<td name="sender_id">{{ transaction.sender_id }}</td>
 							<td>{{ transaction.recipient_id }}</td>
@@ -159,14 +164,21 @@
 		filter = input.value.toUpperCase();
 		table = document.getElementById("table");
 		tr = table.getElementsByTagName("tr");
-		for (i = 1; i < tr.length; i++) {
-			td = tr[i].getElementsByTagName("td")[6];
-			if (td) {
-				txtValue = td.textContent || td.innerText;
-				if (txtValue.toUpperCase().indexOf(filter) > -1) {
-					tr[i].style.display = "";
-				} else {
-					tr[i].style.display = "none";
+		if(filter=="ALL") {
+			for (i = 1; i < tr.length; i++) {
+				console.log("All selected")
+				tr[i].style.display = "";
+			}
+		}else{
+			for (i = 1; i < tr.length; i++) {
+				td = tr[i].getElementsByTagName("td")[6];
+				if (td) {
+					txtValue = td.textContent || td.innerText;
+					if (txtValue.toUpperCase().indexOf(filter) > -1) {
+						tr[i].style.display = "";
+					} else {
+						tr[i].style.display = "none";
+					}
 				}
 			}
 		}
