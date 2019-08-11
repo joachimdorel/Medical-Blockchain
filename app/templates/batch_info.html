@@ -3,6 +3,13 @@
 
 {% block content %}
 
+  <div class="">
+    <form action="{{ url_for('decode_datamatrix') }}" method="POST" enctype="multipart/form-data">
+           <input type="file" name="file"/>
+           <input type="submit" />
+        </form>
+  </div>
+
   <br>
   <form action="/batch_info" id="textform" method="post">
     <input type="text" name="batch_id" placeholder="Batch ID">

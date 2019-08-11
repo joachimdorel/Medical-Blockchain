@@ -4,20 +4,32 @@
 {% block content %}
 	<div class="pl-3 pr-3 pt-3">
 		<div class="row">
+			<div class="col-12 text-right">
+				<form action="{{ url_for('decode_datamatrix') }}" method="POST" enctype="multipart/form-data">
+					<input type="file" name="file" class="btn btn-secondary" class="Import Datamatrix"/>
+					<input type="submit" value="Search with Datamatrix" class="btn btn-primary"/>
+				</form>
+			</div>
+		</div>
+	</div>
+	<hr class="mt-0 mb-0">
+
+	<div class="pl-3 pr-3 pt-3">
+		<div class="row">
 			<div class="col-3">
-				<input class="form-control" id="medicineNameInput" type="text" placeholder="Search by Medicine Name" onkeyup="filterByMedecineName()">
+				<input class="form-control" id="medicineNameInput" type="text" placeholder="Filter by Medicine Name" onkeyup="filterByMedecineName()">
 			</div>
 			<div class="col-3">
-				<input class="form-control" id="batchInput" type="text" placeholder="Search by Batch ID" onkeyup="filterByBatchID()">
+				<input class="form-control" id="batchInput" type="text" placeholder="Filter by Batch ID" onkeyup="filterByBatchID()">
 			</div>
 			<div class="col-2">
-				<input class="form-control" id="senderIDInput" type="text" placeholder="Search by Sender ID" onkeyup="filterBySenderID()">
+				<input class="form-control" id="senderIDInput" type="text" placeholder="Filter by Sender ID" onkeyup="filterBySenderID()">
 			</div>
 			<div class="col-2">
-				<input class="form-control" id="recipientIDInput" type="text" placeholder="Search by Recipient ID" onkeyup="filterByRecipientID()">
+				<input class="form-control" id="recipientIDInput" type="text" placeholder="Filter by Recipient ID" onkeyup="filterByRecipientID()">
 			</div>
-			<div class="col-2">
-		  	<select onchange="filterByStatus()" id="statusInput">
+			<div class="col-2 text-right">
+		  	<select class="form-control" onchange="filterByStatus()" id="statusInput">
 		      <option value="all">All Transactions</option>
 		      <option value="accepted">Accepted</option>
 		      <option value="refused">Refused</option>

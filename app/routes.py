@@ -3,11 +3,15 @@ import json
 
 from hubarcode.datamatrix import DataMatrixEncoder
 import requests
+import re
 from flask import render_template, redirect, request, flash, url_for
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, MedicineForm, BatchForm
 from flask_login import current_user, login_user, login_required, logout_user
 from app.models import Actor, Medicine, Adress, Batch
+from pylibdmtx.pylibdmtx import decode
+from werkzeug import secure_filename
+from PIL import Image
 
 from sqlalchemy.exc import IntegrityError
 
@@ -430,6 +434,24 @@ def submit_accept_transaction():
 
         return redirect(url_for('user_transactions'))
 
+@app.route('/decode_datamatrix', methods=['POST'])
+def decode_datamatrix():
+    if request.method == 'POST':
+        f = request.files['file']
+        if f:
+            try:
+                f.save("app/static/img/datamatrix/imported_datamatrix.png")
+                data = decode(Image.open("app/static/img/datamatrix/imported_datamatrix.png"))[0][0]
+
+                batch_id = re.search("-..-..10{1}.*", data.split('ASCII2991')[0]).group(0)[8:]
+                return redirect(url_for('batch', batch_id=batch_id))
+            except:
+                flash("The datamatrix is not compatible.")
+                print("Exception Decode Datamatrix")
+    return redirect(url_for('index'))
+
+
+
 def timestamp_to_string(epoch_time):
     """
     Convert the timestamp to a readable string
@@ -454,7 +476,3 @@ def datamatrix(batch_id):
     datamatrix_data.save("app/static/img/datamatrix/"+ str(data) + ".png")
 
     return data
-
-def getDataFromDatamatrix(datamatrix):
-
-    return 1
