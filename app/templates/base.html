@@ -14,7 +14,6 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
     <!-- Personalized CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <!-- JQuery -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -25,6 +24,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/jq-3.3.1/dt-1.10.18/datatables.min.css"/>
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/jq-3.3.1/dt-1.10.18/datatables.min.js"></script>
 
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
     <title>{{ title }}</title>
   </head>
@@ -35,7 +36,6 @@
         <a href="{{ url_for('index') }}">Home</a>
       </h5>
         <nav class="nav justify-content-end">
-          <a class="p-2 text-dark" href="{{ url_for('batch_info') }}">Batch Informations</a>
           {% if current_user.is_anonymous %}
           <a class="btn btn-outline-primary" href="{{ url_for('login') }}">Login</a>
           {% else %}

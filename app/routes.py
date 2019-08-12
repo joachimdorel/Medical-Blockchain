@@ -19,150 +19,7 @@ from sqlalchemy.exc import IntegrityError
 # such nodes as well.
 CONNECTED_NODE_ADDRESS = "http://127.0.0.1:8000/"
 
-transactions = []
 errors =[]
-batch_id = None
-
-def fetch_transactions():
-    """
-    Function to fetch the chain from a blockchain node, parse the
-    data and store it locally.
-    """
-    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
-    response = requests.get(get_chain_address)
-    if response.status_code == 200:
-        chain_content = []
-        chain = json.loads(response.content)
-        for block in chain["chain"]:
-            for transaction in block["transactions"]:
-                transaction["index"] = block["index"]
-                transaction["hash"] = block["previous_hash"]
-                chain_content.append(transaction)
-
-        global transactions
-        transactions = sorted(chain_content, key=lambda k: k['timestamp'], reverse=True)
-        return transactions
-
-def fetch_transactions_without_double():
-    """
-    Function to fetch the chain from a blockchain node, parse the data,
-    check that each transactions only appear once and store it locally.
-    """
-    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
-    response = requests.get(get_chain_address)
-    if response.status_code == 200:
-        chain_content = []
-        chain = json.loads(response.content)
-        for block in chain["chain"]:
-            for transaction in block["transactions"]:
-                transaction["index"] = block["index"]
-                transaction["hash"] = block["previous_hash"]
-                chain_content.append(transaction)
-
-        chain_content_cp = []
-        for transaction in chain_content:
-            transaction_confirmed_or_rejected = False
-            for t in chain_content:
-                if t["batch_id"] == transaction["batch_id"] and t["sender_id"] == transaction["sender_id"] and t["recipient_id"] == transaction["recipient_id"] and t["timestamp"] != transaction["timestamp"]:
-                    transaction_confirmed_or_rejected = True
-            if transaction_confirmed_or_rejected is False or transaction["status"] != "waiting" :
-                chain_content_cp.append(transaction)
-
-        global transactions
-        transactions = sorted(chain_content_cp, key=lambda k: k['timestamp'], reverse=True)
-
-def fetch_current_actor_transactions():
-    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
-    response = requests.get(get_chain_address)
-    if response.status_code == 200:
-        transactions_actor=[]
-        data_transactions=[]
-        chain = json.loads(response.content)
-        for element in chain["chain"]:
-            for transaction_elem in element["transactions"]:
-                data_transactions.append(transaction_elem)
-
-        current_transactions = sorted(data_transactions, key=lambda k: k['timestamp'], reverse=True)
-
-        batch_with_owner = []
-
-        for t in current_transactions:
-            batch_have_owner = False
-            for b in batch_with_owner:
-                if b['batch_id'] == t['batch_id']:
-                    batch_have_owner = True
-
-            if not batch_have_owner:
-                if t['status'] == "accepted" or t['status'] == "waiting":
-                    if t['recipient_id'] == current_user.id:
-                        transactions_actor.append(t)
-                if t['status'] == "refused":
-                    if t['sender_id'] == current_user.id:
-                        transactions_actor.append(t)
-                batch_with_owner.append(t)
-
-        global transactions
-        transactions = sorted(transactions_actor, key=lambda k: k['timestamp'], reverse=True)
-
-def fetch_batch_transactions(batch_id):
-    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
-    response = requests.get(get_chain_address)
-    if response.status_code == 200:
-        transactions_batch = []
-        chain = json.loads(response.content)
-
-
-        for element in chain["chain"]:
-            for transaction in element["transactions"]:
-                print("Fetching the batch transactions")
-                if int(transaction["batch_id"]) == int(batch_id):
-                    transactions_batch.append(transaction)
-
-        transactions_batch = sorted(transactions_batch, key=lambda k: k['timestamp'], reverse=True)
-
-        return transactions_batch
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        actor = Actor.query.filter_by(actor_name=form.actor_name.data).first()
-        if actor is None or not actor.check_password(form.password.data):
-            flash('Invalid actor name or password')
-            return redirect(url_for('login'))
-
-        login_user(actor, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('index')
-        return redirect(next_page)
-    return render_template('login.html', title='Sign In', form=form)
-
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        actor = Actor(actor_name=form.actor_name.data, email=form.email.data, phone=form.phone.data, manufacturer=form.manufacturer.data)
-        actor.set_password(form.password.data)
-        db.session.add(actor)
-        db.session.flush() # to get the id of the actor just added
-
-        adress = Adress(street=form.street.data, city=form.city.data, state=form.state.data, zip_code=form.zip_code.data, country=form.country.data, id=actor.id)
-        db.session.add(adress)
-        db.session.commit()
-        flash('Congratulations, you are now registered!')
-
-        login_user(actor, remember=True)
-
-        return redirect(url_for('index'))
-    return render_template('register.html', title='Register', form=form)
 
 @app.route('/')
 def index():
@@ -176,39 +33,6 @@ def index():
                            transactions=transactions,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string,
-                           errors=errors)
-
-@app.route('/batch_info')
-def batch_info():
-    """
-    List the data of a specific medicine
-    """
-    fetch_transactions()
-    global transactions
-    global med_id
-
-    medicine_transaction = []
-    owner = None
-
-    flash("Does not work yet")
-    for transaction in transactions:
-        pass
-        '''
-        if transaction['batch_id'] == int(batch_id):
-            if owner == None and transaction["status"] == "accepted":
-                owner=transaction["recipient_id"]
-            medicine_transaction.append(transaction)
-        '''
-
-    data = {}
-    data["owner"] = owner
-    return render_template('batch_info.html',
-                           title='Data of a particular medicine',
-                           transactions=medicine_transaction,
-                           node_address=CONNECTED_NODE_ADDRESS,
-                           readable_time=timestamp_to_string,
-                           batch_id=batch_id,
-                           data=data,
                            errors=errors)
 
 @app.route('/actor/<actor_name>')
@@ -239,8 +63,7 @@ def user_medicine():
     """
     List all the medicine of a specific user (his stock)
     """
-    fetch_transactions_without_double()
-
+    transactions = fetch_transactions_without_double()
     medicines = Medicine.query.filter_by(manufacturer_id=current_user.id).all()
 
     #blockchain
@@ -275,27 +98,6 @@ def request_mine():
 def mine_blockchain():
     mine_address = "{}mine".format(CONNECTED_NODE_ADDRESS)
     response = requests.get(mine_address)
-
-@app.route('/fetch_transactions_for_id', methods=['POST'])
-@login_required
-def fetch_transactions_for_id():
-    """
-    Endpoint to get all the transaction for a given ID
-    """
-    user_id = current_user.id
-
-    return redirect(url_for('user_transactions'))
-
-@app.route('/fetch_medicine_for_med_id', methods=['POST'])
-def fetch_medicine_for_med_id():
-    """
-    Endpoint to get all the medicine for a given med_id
-    """
-    med = request.form["med_id"]
-    global med_id
-    med_id = med
-
-    return redirect(url_for('medicine'))
 
 @app.route('/fetch_medicine_for_user_id', methods=['POST'])
 @login_required
@@ -359,7 +161,7 @@ def new_batch():
 @app.route('/send_batch', methods=['POST'])
 @login_required
 def send_batch():
-    fetch_current_actor_transactions()
+    transactions = fetch_current_actor_transactions()
     if request.method == 'POST':
         if request.form['batch_id']=='' or request.form['recipient_id']=='':
             flash('Missing data')
@@ -390,7 +192,7 @@ def send_batch():
 @app.route('/user_transactions')
 @login_required
 def user_transactions():
-    fetch_current_actor_transactions()
+    transactions = fetch_current_actor_transactions()
 
     user_transactions = []
     for transaction in transactions:
@@ -451,6 +253,59 @@ def decode_datamatrix():
     return redirect(url_for('index'))
 
 
+'''
+--------------------
+    LOGIN ROUTES
+--------------------
+'''
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        actor = Actor.query.filter_by(actor_name=form.actor_name.data).first()
+        if actor is None or not actor.check_password(form.password.data):
+            flash('Invalid actor name or password')
+            return redirect(url_for('login'))
+
+        login_user(actor, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+        return redirect(next_page)
+    return render_template('login.html', title='Sign In', form=form)
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        actor = Actor(actor_name=form.actor_name.data, email=form.email.data, phone=form.phone.data, manufacturer=form.manufacturer.data)
+        actor.set_password(form.password.data)
+        db.session.add(actor)
+        db.session.flush() # to get the id of the actor just added
+
+        adress = Adress(street=form.street.data, city=form.city.data, state=form.state.data, zip_code=form.zip_code.data, country=form.country.data, id=actor.id)
+        db.session.add(adress)
+        db.session.commit()
+        flash('Congratulations, you are now registered!')
+
+        login_user(actor, remember=True)
+
+        return redirect(url_for('index'))
+    return render_template('register.html', title='Register', form=form)
+
+'''
+--------------------
+    SUPPORT FUNCTIONS
+--------------------
+'''
 
 def timestamp_to_string(epoch_time):
     """
@@ -476,3 +331,98 @@ def datamatrix(batch_id):
     datamatrix_data.save("app/static/img/datamatrix/"+ str(data) + ".png")
 
     return data
+
+def fetch_transactions():
+    """
+    Function to fetch the chain from a blockchain node, parse the
+    data and store it locally.
+    """
+    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(get_chain_address)
+    if response.status_code == 200:
+        chain_content = []
+        chain = json.loads(response.content)
+        for block in chain["chain"]:
+            for transaction in block["transactions"]:
+                transaction["index"] = block["index"]
+                transaction["hash"] = block["previous_hash"]
+                chain_content.append(transaction)
+
+        return sorted(chain_content, key=lambda k: k['timestamp'], reverse=True)
+
+def fetch_transactions_without_double():
+    """
+    Function to fetch the chain from a blockchain node, parse the data,
+    check that each transactions only appear once and store it locally.
+    """
+    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(get_chain_address)
+    if response.status_code == 200:
+        chain_content = []
+        chain = json.loads(response.content)
+        for block in chain["chain"]:
+            for transaction in block["transactions"]:
+                transaction["index"] = block["index"]
+                transaction["hash"] = block["previous_hash"]
+                chain_content.append(transaction)
+
+        chain_content_cp = []
+        for transaction in chain_content:
+            transaction_confirmed_or_rejected = False
+            for t in chain_content:
+                if t["batch_id"] == transaction["batch_id"] and t["sender_id"] == transaction["sender_id"] and t["recipient_id"] == transaction["recipient_id"] and t["timestamp"] != transaction["timestamp"]:
+                    transaction_confirmed_or_rejected = True
+            if transaction_confirmed_or_rejected is False or transaction["status"] != "waiting" :
+                chain_content_cp.append(transaction)
+
+        return sorted(chain_content_cp, key=lambda k: k['timestamp'], reverse=True)
+
+def fetch_current_actor_transactions():
+    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(get_chain_address)
+    if response.status_code == 200:
+        transactions_actor=[]
+        data_transactions=[]
+        chain = json.loads(response.content)
+        for element in chain["chain"]:
+            for transaction_elem in element["transactions"]:
+                data_transactions.append(transaction_elem)
+
+        current_transactions = sorted(data_transactions, key=lambda k: k['timestamp'], reverse=True)
+
+        batch_with_owner = []
+
+        for t in current_transactions:
+            batch_have_owner = False
+            for b in batch_with_owner:
+                if b['batch_id'] == t['batch_id']:
+                    batch_have_owner = True
+
+            if not batch_have_owner:
+                if t['status'] == "accepted" or t['status'] == "waiting":
+                    if t['recipient_id'] == current_user.id:
+                        transactions_actor.append(t)
+                if t['status'] == "refused":
+                    if t['sender_id'] == current_user.id:
+                        transactions_actor.append(t)
+                batch_with_owner.append(t)
+
+        return sorted(transactions_actor, key=lambda k: k['timestamp'], reverse=True)
+
+def fetch_batch_transactions(batch_id):
+    get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(get_chain_address)
+    if response.status_code == 200:
+        transactions_batch = []
+        chain = json.loads(response.content)
+
+
+        for element in chain["chain"]:
+            for transaction in element["transactions"]:
+                print("Fetching the batch transactions")
+                if int(transaction["batch_id"]) == int(batch_id):
+                    transactions_batch.append(transaction)
+
+        transactions_batch = sorted(transactions_batch, key=lambda k: k['timestamp'], reverse=True)
+
+        return transactions_batch
