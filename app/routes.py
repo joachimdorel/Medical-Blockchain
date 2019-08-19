@@ -20,6 +20,7 @@ from sqlalchemy.exc import IntegrityError
 CONNECTED_NODE_ADDRESS = "http://127.0.0.1:8000/"
 
 errors =[]
+manufacturer = True
 
 @app.route('/')
 def index():
@@ -31,6 +32,7 @@ def index():
     return render_template('index.html',
                            title='Medical Blockchain',
                            transactions=transactions,
+                           manufacturer=manufacturer,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string,
                            errors=errors)
@@ -40,20 +42,37 @@ def index():
 def actor(actor_name):
     actor = Actor.query.filter_by(actor_name=actor_name).first_or_404()
     adress = Adress.query.filter_by(id=actor.id).first()
-    return render_template('actor.html', title=actor.actor_name, actor=actor, adress=adress)
+    return render_template( 'actor.html',
+                            title=actor.actor_name,
+                            actor=actor,
+                            manufacturer=manufacturer,
+                            adress=adress)
 
 
 @app.route('/batch/<batch_id>')
 def batch(batch_id):
     datamatrix_data = datamatrix(batch_id)
     transactions = fetch_batch_transactions(batch_id)
-
     batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
+
+    # Get all the parent of this batch
+    while batch.parent_batch_id is not None:
+        batch = Batch.query.filter_by(batch_id=batch.parent_batch_id).first_or_404()
+        transactions.append(fetch_batch_transactions(batch.batch_id)[0])
+
+    transactions = sorted(transactions, key=lambda k: k['timestamp'], reverse=True)
+
+    for t in transactions:
+        if int(t['batch_id']) != int(batch_id):
+            t['status']='splitted'
+
     medicine = Medicine.query.filter_by(medicine_id=batch.medicine_id).first()
     return render_template( 'batch.html',
                             title="Batch: " + str(batch.batch_id),
-                            medicine=medicine, batch=batch,
+                            medicine=medicine,
+                            batch=batch,
                             transactions=transactions,
+                            manufacturer=manufacturer,
                             readable_time=timestamp_to_string,
                             datamatrix_data=datamatrix_data)
 
@@ -82,6 +101,7 @@ def user_medicine():
                            title='Data of an user stock',
                            transactions=transactions_user,
                            medicines=medicines,
+                           manufacturer=manufacturer,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string,
                            user_id=user_id,
@@ -158,31 +178,95 @@ def new_batch():
 
     return redirect(url_for('user_medicine'))
 
+@app.route('/split_batch/<batch_id>', methods=['POST'])
+@login_required
+def split_batch(batch_id):
+    batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
+
+    return 0
+
 @app.route('/send_batch', methods=['POST'])
 @login_required
 def send_batch():
     transactions = fetch_current_actor_transactions()
     if request.method == 'POST':
-        if request.form['batch_id']=='' or request.form['recipient_id']=='':
+        if request.form['batch_id']=='' or request.form['recipient_id']=='' or request.form['quantity']=='':
             flash('Missing data')
         else:
             user_owner_batch = False
-
+            batch_quantity = 0
+            # Check that the user is the owner of the batch he is trying to send
+            # The user is the owner is the batch is in the list of transactions
+            # associated with his id.
             for t in transactions:
                 if int(request.form['batch_id']) == int(t['batch_id']):
                     user_owner_batch = True
+                    batch_origin = Batch.query.filter_by(batch_id=request.form['batch_id']).first_or_404()
+
+
 
             if user_owner_batch:
-                json_object = {
-                    'batch_id': int(request.form['batch_id']),
-                    'sender_id': int(current_user.id),
-                    'recipient_id': int(request.form['recipient_id']),
-                    'quantity': int(Batch.query.filter_by(batch_id=request.form['batch_id']).first().quantity)
-                }
-                new_transaction_address = "{}new_transaction".format(CONNECTED_NODE_ADDRESS)
-                response = requests.post(   new_transaction_address,
-                                            json=json_object,
-                                            headers={'Content-type': 'application/json'})
+                if batch_origin.quantity == request.form['quantity']: #Send all the batch
+                    json_object = {
+                        'batch_id': int(request.form['batch_id']),
+                        'sender_id': int(current_user.id),
+                        'recipient_id': int(request.form['recipient_id']),
+                        'quantity': int(batch_origin.quantity)
+                    }
+                    new_transaction_address = "{}new_transaction".format(CONNECTED_NODE_ADDRESS)
+                    response = requests.post(   new_transaction_address,
+                                                json=json_object,
+                                                headers={'Content-type': 'application/json'})
+
+                elif batch_origin.quantity < request.form['quantity']: # Split the batch in 2
+                    size_batch_1 = int(batch_origin.quantity) - int(request.form['quantity'])
+                    size_batch_2 = int(request.form['quantity'])
+
+                    # Add new batches
+                    # batch1 keep the same owner
+                    # batch2 is send to the new owner
+                    batch1=Batch(exp_date=batch_origin.exp_date, medicine_id=batch_origin.medicine_id, quantity=size_batch_1, parent_batch_id=batch_origin.batch_id)
+                    batch2=Batch(exp_date=batch_origin.exp_date, medicine_id=batch_origin.medicine_id, quantity=size_batch_2, parent_batch_id=batch_origin.batch_id)
+                    db.session.add(batch1)
+                    db.session.add(batch2)
+                    db.session.flush()
+                    db.session.commit()
+
+                    json_object1 = {
+                        'batch_id': int(batch1.batch_id),
+                        'sender_id': int(current_user.id),
+                        'quantity': int(batch1.quantity)
+                    }
+
+                    json_object2 = {
+                        'batch_id': int(batch2.batch_id),
+                        'sender_id': int(current_user.id),
+                        'quantity': int(batch2.quantity)
+                    }
+                    new_batch_adress="{}register_batch".format(CONNECTED_NODE_ADDRESS)
+                    requests.post(new_batch_adress,
+                                  json=json_object1,
+                                  headers={'Content-type': 'application/json'})
+                    requests.post(new_batch_adress,
+                                  json=json_object2,
+                                  headers={'Content-type': 'application/json'})
+
+                    mine_blockchain() #Add the new batch to the blockchain
+
+                    json_object = {
+                        'batch_id': int(batch2.batch_id),
+                        'sender_id': int(current_user.id),
+                        'recipient_id': int(request.form['recipient_id']),
+                        'quantity': int(batch2.quantity)
+                    }
+                    new_transaction_address = "{}new_transaction".format(CONNECTED_NODE_ADDRESS)
+                    response = requests.post(   new_transaction_address,
+                                                json=json_object,
+                                                headers={'Content-type': 'application/json'})
+
+
+                elif batch_origin.quantity > request.form['quantity']: # Don't do anything
+                    flash('You don\'t have that quantity of medicine.')
 
             else:
                 flash('You are not the owner of the batch')
@@ -205,6 +289,7 @@ def user_transactions():
     return render_template('user_transactions.html',
                            title='Manage yours transactions',
                            transactions=user_transactions,
+                           manufacturer=manufacturer,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string,
                            user_id=current_user.id,
@@ -249,7 +334,6 @@ def decode_datamatrix():
                 return redirect(url_for('batch', batch_id=batch_id))
             except:
                 flash("The datamatrix is not compatible.")
-                print("Exception Decode Datamatrix")
     return redirect(url_for('index'))
 
 
@@ -268,6 +352,12 @@ def login():
             flash('Invalid actor name or password')
             return redirect(url_for('login'))
 
+        global manufacturer
+        if actor.manufacturer != 1:
+            manufacturer = False
+        else:
+            manufacturer = True
+
         login_user(actor, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -277,6 +367,9 @@ def login():
 
 @app.route('/logout')
 def logout():
+    global manufacturer
+    manufacturer = False
+
     logout_user()
     return redirect(url_for('index'))
 
@@ -295,6 +388,12 @@ def register():
         db.session.add(adress)
         db.session.commit()
         flash('Congratulations, you are now registered!')
+
+        global manufacturer
+        if actor.manufacturer != 1:
+            manufacturer = False
+        else:
+            manufacturer = True
 
         login_user(actor, remember=True)
 
@@ -416,10 +515,8 @@ def fetch_batch_transactions(batch_id):
         transactions_batch = []
         chain = json.loads(response.content)
 
-
         for element in chain["chain"]:
             for transaction in element["transactions"]:
-                print("Fetching the batch transactions")
                 if int(transaction["batch_id"]) == int(batch_id):
                     transactions_batch.append(transaction)
 

@@ -37,19 +37,21 @@
       </h5>
         <nav class="nav justify-content-end">
           {% if current_user.is_anonymous %}
-          <a class="btn btn-outline-primary" href="{{ url_for('login') }}">Login</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('login') }}">Login</a>
           {% else %}
-          <a class="p-2 text-dark underline" href="{{ url_for('user_medicine') }}">Manage Medicine</a>
-          <a class="p-2 text-dark" href="{{ url_for('user_transactions') }}">Manage Transactions</a>
-          <div class="btn-group ml-2">
-            <a type="button" class="btn btn-primary" href="{{ url_for('actor', actor_name=current_user.actor_name) }}">Profile</a>
-            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+          {% if manufacturer == true %}
+            <a class="p-2 text-dark underline" href="{{ url_for('user_medicine') }}">Manage Medicine</a>
+          {% endif %}
+            <a class="p-2 text-dark" href="{{ url_for('user_transactions') }}">Manage Transactions</a>
+            <div class="btn-group ml-2">
+              <a type="button" class="btn btn-primary" href="{{ url_for('actor', actor_name=current_user.actor_name) }}">Profile</a>
+              <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="sr-only">Toggle Dropdown</span>
+              </button>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+              </div>
             </div>
-          </div>
           {% endif %}
           <a href="/request_mine" class="ml-2 pl-2" id="sync_blockchain"><button class="btn btn-info">Synchronise Blockchain</button></a>
         </nav>

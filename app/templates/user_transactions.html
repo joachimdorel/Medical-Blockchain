@@ -8,6 +8,7 @@
     <tr>
     <form class="form-horizontal top-form" method="POST" action="{{ url_for('send_batch') }}">
         <td><input type="number" id="batch_id" name="batch_id" placeholder="Batch ID"></td>
+        <td><input type="number" id="quantity" name="quantity" placeholder="Quantity"></td>
         <td><input type="number" id="recipient_id" name="recipient_id" placeholder="Recipient ID"></td>
         <td><input class="btn btn-primary" role="button" type="submit" value="Send Batch"></td>
     </form>

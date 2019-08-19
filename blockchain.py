@@ -161,6 +161,7 @@ def new_transaction():
                 batch_exist = True
 
     if batch_exist is False:
+        print("Medicine does not exist.")
         return 'The medicine does not exist in the blockchain', 400
 
     values["timestamp"] = time.time()
@@ -247,7 +248,11 @@ def mine_transactions():
 def unconfirmed_transactions():
     return jsonify(blockchain.unconfirmed_transactions), 200
 
-# DECENTRALIZATION
+'''
+-----
+DECENTRALIZATION
+-----
+'''
 
 @app.route('/add_nodes', methods=['POST'])
 def register_new_peers():

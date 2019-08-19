@@ -24,6 +24,8 @@
      <tr>
        <th class="" scope="col">Sender ID</th>
        <th class="" scope="col">Recipient ID</th>
+       <th class="" scope="col">Batch ID</th>
+       <th class="" scope="col">Quantity</th>
        <th class="" scope="col">Status</th>
        <th class="" scope="col">Date</th>
      </tr>
@@ -33,6 +35,8 @@
          <tr>
            <td>{{ transaction.sender_id }}</td>
            <td>{{ transaction.recipient_id }}</td>
+           <td name="batch_id"><a href="{{ url_for('batch', batch_id=transaction.batch_id) }}">{{ transaction.batch_id }}</a></td>
+           <td>{{ transaction.quantity }}</td>
            <td>{{ transaction.status }}</td>
            <td>{{ readable_time(transaction.timestamp) }}</td>
          </tr>

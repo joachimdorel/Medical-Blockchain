@@ -37,6 +37,7 @@ class Medicine(db.Model):
 
 class Batch(db.Model):
     batch_id = db.Column(db.Integer, primary_key=True, index=True)
+    parent_batch_id = db.Column(db.Integer)
     exp_date = db.Column(db.String(8))
     quantity = db.Column(db.Integer)
 
