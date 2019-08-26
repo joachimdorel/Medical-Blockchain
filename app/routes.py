@@ -22,6 +22,12 @@ CONNECTED_NODE_ADDRESS = "http://127.0.0.1:8000/"
 errors =[]
 manufacturer = True
 
+@app.route('/update_connected_node_address/<address>')
+def update_connected_node_address(address):
+    global CONNECTED_NODE_ADDRESS
+    CONNECTED_NODE_ADDRESS = "http://127.0.0.1:" + str(address) + "/"
+    return "Success"
+
 @app.route('/')
 def index():
     transactions = fetch_transactions()
@@ -48,6 +54,15 @@ def actor(actor_name):
                             manufacturer=manufacturer,
                             adress=adress)
 
+@app.route('/actorID/<actor_id>')
+def actorID(actor_id):
+    actor = Actor.query.filter_by(id=actor_id).first_or_404()
+    adress = Adress.query.filter_by(id=actor_id).first()
+    return render_template( 'actor.html',
+                            title=actor.actor_name,
+                            actor=actor,
+                            manufacturer=manufacturer,
+                            adress=adress)
 
 @app.route('/batch/<batch_id>')
 def batch(batch_id):
@@ -206,7 +221,7 @@ def send_batch():
 
 
             if user_owner_batch:
-                if batch_origin.quantity == request.form['quantity']: #Send all the batch
+                if int(batch_origin.quantity) == int(request.form['quantity']): #Send all the batch
                     json_object = {
                         'batch_id': int(request.form['batch_id']),
                         'sender_id': int(current_user.id),
@@ -218,7 +233,7 @@ def send_batch():
                                                 json=json_object,
                                                 headers={'Content-type': 'application/json'})
 
-                elif batch_origin.quantity < request.form['quantity']: # Split the batch in 2
+                elif int(batch_origin.quantity) < int(request.form['quantity']): # Split the batch in 2
                     size_batch_1 = int(batch_origin.quantity) - int(request.form['quantity'])
                     size_batch_2 = int(request.form['quantity'])
 

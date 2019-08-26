@@ -64,11 +64,11 @@
 	            <td name="batch_quantity">{{ transaction.quantity }}</td>
 							{% if transaction.sender_id == transaction.recipient_id %}
 							<td>Batch created</td>
-							<td>{{ transaction.recipient_id }}</td>
+							<td><a href="{{ url_for('actorID', actor_id = transaction.recipient_id) }}">{{ transaction.recipient_id }}</a></td>
 							<td>{{ transaction.status }}</td>
 							{% else %}
-							<td name="sender_id">{{ transaction.sender_id }}</td>
-							<td>{{ transaction.recipient_id }}</td>
+							<td name="sender_id"><a href="{{ url_for('actorID', actor_id = transaction.sender_id) }}">{{ transaction.sender_id }}</a></td>
+							<td><a href="{{ url_for('actorID', actor_id = transaction.recipient_id) }}">{{ transaction.recipient_id }}</a></td>
 							<td>{{ transaction.status }}</td>
 							{% endif %}
 	            <td>{{ readable_time(transaction.timestamp) }}</td>
