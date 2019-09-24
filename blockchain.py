@@ -112,7 +112,6 @@ class Blockchain:
         Function who add all the unconfirmed transactions to a block and
         getting then the proof of work
         """
-
         #if there is no transaction
         if not self.unconfirmed_transactions:
             return False
@@ -128,7 +127,6 @@ class Blockchain:
         self.add_block(new_block, proof)
 
         self.unconfirmed_transactions = []
-        # TODO: make that return denser (size of the block, list of the transactions)
         announce_new_block(new_block)
         return new_block.index
 
@@ -223,7 +221,7 @@ def register_batch():
 
 @app.route('/chain', methods=['GET'])
 def get_chain():
-    #consensus()
+    consensus()
     chain_data = []
     for block in blockchain.chain:
         chain_data.append(block.__dict__)
@@ -254,6 +252,7 @@ DECENTRALIZATION
 -----
 '''
 
+'''
 @app.route('/add_nodes', methods=['POST'])
 def register_new_peers():
     nodes = request.get_json()
@@ -263,6 +262,7 @@ def register_new_peers():
         peers.add(node)
 
     return "Success", 201
+'''
 
 @app.route('/register_node', methods=['POST'])
 def register_new_node():

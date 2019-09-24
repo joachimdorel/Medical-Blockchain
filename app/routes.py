@@ -22,10 +22,15 @@ CONNECTED_NODE_ADDRESS = "http://127.0.0.1:8000/"
 errors =[]
 manufacturer = True
 
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
 @app.route('/update_connected_node_address/<address>')
 def update_connected_node_address(address):
     global CONNECTED_NODE_ADDRESS
-    CONNECTED_NODE_ADDRESS = "http://127.0.0.1:" + str(address) + "/"
+    #CONNECTED_NODE_ADDRESS = "http://127.0.0.1:" + str(address) + "/"
     return "Success"
 
 @app.route('/')
@@ -126,13 +131,13 @@ def user_medicine():
 @login_required
 def request_mine():
     mine_address = "{}mine".format(CONNECTED_NODE_ADDRESS)
-    response = requests.get(mine_address)
+    requests.get(mine_address)
 
     return redirect(url_for('index'))
 
 def mine_blockchain():
     mine_address = "{}mine".format(CONNECTED_NODE_ADDRESS)
-    response = requests.get(mine_address)
+    requests.get(mine_address)
 
 @app.route('/fetch_medicine_for_user_id', methods=['POST'])
 @login_required
@@ -193,13 +198,6 @@ def new_batch():
 
     return redirect(url_for('user_medicine'))
 
-@app.route('/split_batch/<batch_id>', methods=['POST'])
-@login_required
-def split_batch(batch_id):
-    batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
-
-    return 0
-
 @app.route('/send_batch', methods=['POST'])
 @login_required
 def send_batch():
@@ -218,8 +216,6 @@ def send_batch():
                     user_owner_batch = True
                     batch_origin = Batch.query.filter_by(batch_id=request.form['batch_id']).first_or_404()
 
-
-
             if user_owner_batch:
                 if int(batch_origin.quantity) == int(request.form['quantity']): #Send all the batch
                     json_object = {
@@ -233,7 +229,8 @@ def send_batch():
                                                 json=json_object,
                                                 headers={'Content-type': 'application/json'})
 
-                elif int(batch_origin.quantity) < int(request.form['quantity']): # Split the batch in 2
+                elif int(batch_origin.quantity) > int(request.form['quantity']): # Split the batch in 2
+                    print("Breaking the batch in 2")
                     size_batch_1 = int(batch_origin.quantity) - int(request.form['quantity'])
                     size_batch_2 = int(request.form['quantity'])
 
