@@ -1,2 +1,7 @@
 *.pyc
 .DS_Store
+*.xml
+.vscode
+venv/
+app.db
+venv/*

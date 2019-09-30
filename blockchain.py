@@ -131,7 +131,6 @@ class Blockchain:
         return new_block.index
 
 # CREATION OF THE BLOCKCHAIN API
-
 app = Flask(__name__)
 
 # Generate a globally unique address for this node
@@ -323,6 +322,7 @@ def create_chain_from_dump(chain_dump):
             blockchain.chain.append(block)
     return blockchain
 
+
 @app.route('/add_block', methods=['POST'])
 def verify_and_add_block():
     block_data = request.get_json()
@@ -339,6 +339,7 @@ def verify_and_add_block():
         return "The block was discarded by the node", 400
 
     return "Block added to the chain", 201
+
 
 def consensus():
     """
@@ -362,6 +363,7 @@ def consensus():
         return True
 
     return False
+
 
 def announce_new_block(block):
     """
