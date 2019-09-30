@@ -4,4 +4,3 @@
 .vscode
 venv/
 app.db
-venv/*
