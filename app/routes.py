@@ -15,13 +15,11 @@ from PIL import Image
 
 from sqlalchemy.exc import IntegrityError
 
-# The node with which our application interacts, there can be multiple
-# such nodes as well.
+# The node with which our application interacts, there can be multiple nodes.
 CONNECTED_NODE_ADDRESS = "http://127.0.0.1:8000/"
 
 errors =[]
 manufacturer = True
-
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -29,12 +27,20 @@ def not_found_error(error):
 
 @app.route('/update_connected_node_address/<address>')
 def update_connected_node_address(address):
+    """
+    Route to change the currently connected node
+    """
+    #TODO update these method 
+
     global CONNECTED_NODE_ADDRESS
     #CONNECTED_NODE_ADDRESS = "http://127.0.0.1:" + str(address) + "/"
     return "Success"
 
 @app.route('/')
 def index():
+    """
+    Build an get the index
+    """
     transactions = fetch_transactions()
     for transaction in transactions:
         medicine = Medicine.query.filter_by(medicine_id=Batch.query.filter_by(batch_id=transaction['batch_id']).first().medicine_id).first()
@@ -51,6 +57,9 @@ def index():
 @app.route('/actor/<actor_name>')
 @login_required
 def actor(actor_name):
+    """
+    Return the actor page for an actor of the blockchain using the actor name (a string)
+    """
     actor = Actor.query.filter_by(actor_name=actor_name).first_or_404()
     adress = Adress.query.filter_by(id=actor.id).first()
     return render_template( 'actor.html',
@@ -61,6 +70,9 @@ def actor(actor_name):
 
 @app.route('/actorID/<actor_id>')
 def actorID(actor_id):
+    """
+    Return the actor page for an actor of the blockchain using the actor id (an int)
+    """
     actor = Actor.query.filter_by(id=actor_id).first_or_404()
     adress = Adress.query.filter_by(id=actor_id).first()
     return render_template( 'actor.html',
@@ -71,7 +83,10 @@ def actorID(actor_id):
 
 @app.route('/batch/<batch_id>')
 def batch(batch_id):
-    datamatrix_data = datamatrix(batch_id)
+    """
+    Return the batch page for a batch of the blockchain using the batch id (an int)
+    """
+    datamatrix_data = generateDatamatrix(batch_id)
     transactions = fetch_batch_transactions(batch_id)
     batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
 
@@ -100,7 +115,7 @@ def batch(batch_id):
 @login_required
 def user_medicine():
     """
-    List all the medicine of a specific user (his stock)
+    List all the medicine of the currently connected user (his stock)
     """
     transactions = fetch_transactions_without_double()
     medicines = Medicine.query.filter_by(manufacturer_id=current_user.id).all()
@@ -130,12 +145,18 @@ def user_medicine():
 @app.route('/request_mine', methods=['GET'])
 @login_required
 def request_mine():
+    """
+    Request the connected node to mine for a node's user
+    """
     mine_address = "{}mine".format(CONNECTED_NODE_ADDRESS)
     requests.get(mine_address)
 
     return redirect(url_for('index'))
 
 def mine_blockchain():
+    """
+    Request the connected node to mine
+    """
     mine_address = "{}mine".format(CONNECTED_NODE_ADDRESS)
     requests.get(mine_address)
 
@@ -143,7 +164,7 @@ def mine_blockchain():
 @login_required
 def fetch_medicine_for_user_id():
     """
-    Endpoint to get all the medicine for a given user_id
+    Route to get all the medicine for a given user_id
     """
     user_id = current_user.id
 
@@ -153,7 +174,7 @@ def fetch_medicine_for_user_id():
 @login_required
 def new_medicine():
     """
-    Endpoint to add a new medicine to the blockchain
+    Route to add a new medicine to the blockchain
     """
 
     if request.method == 'POST':
@@ -174,6 +195,9 @@ def new_medicine():
 @app.route('/new_batch', methods=['POST'])
 @login_required
 def new_batch():
+    """
+    Route to create a new batch
+    """
     if request.method == 'POST':
         if request.form['exp_date']=='' or request.form['quantity']=='':
             flash('Missing data')
@@ -201,6 +225,9 @@ def new_batch():
 @app.route('/send_batch', methods=['POST'])
 @login_required
 def send_batch():
+    """
+    Route to send a batch between 2 blockchains users IDs
+    """
     transactions = fetch_current_actor_transactions()
     if request.method == 'POST':
         if request.form['batch_id']=='' or request.form['recipient_id']=='' or request.form['quantity']=='':
@@ -288,6 +315,9 @@ def send_batch():
 @app.route('/user_transactions')
 @login_required
 def user_transactions():
+    """
+    List the transactions of the actor currently connected
+    """
     transactions = fetch_current_actor_transactions()
 
     user_transactions = []
@@ -335,6 +365,9 @@ def submit_accept_transaction():
 
 @app.route('/decode_datamatrix', methods=['POST'])
 def decode_datamatrix():
+    """
+    From the image of a datamatrix, get the batch associated with it
+    """
     if request.method == 'POST':
         f = request.files['file']
         if f:
@@ -357,6 +390,9 @@ def decode_datamatrix():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Route to login
+    """
     form = LoginForm()
     if form.validate_on_submit():
         actor = Actor.query.filter_by(actor_name=form.actor_name.data).first()
@@ -379,6 +415,9 @@ def login():
 
 @app.route('/logout')
 def logout():
+    """
+    Route to logout
+    """
     global manufacturer
     manufacturer = False
 
@@ -387,6 +426,9 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Route to register a new user
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     form = RegistrationForm()
@@ -424,7 +466,10 @@ def timestamp_to_string(epoch_time):
     """
     return datetime.datetime.fromtimestamp(epoch_time).strftime('%d/%m/%Y - %H:%M:%S')
 
-def datamatrix(batch_id):
+def generateDatamatrix(batch_id):
+    """
+    Generate the datamatrix of a batch using the batch id
+    """
     batch = Batch.query.filter_by(batch_id=batch_id).first_or_404()
     medicine = Medicine.query.filter_by(medicine_id=batch.medicine_id).first()
 
@@ -489,6 +534,9 @@ def fetch_transactions_without_double():
         return sorted(chain_content_cp, key=lambda k: k['timestamp'], reverse=True)
 
 def fetch_current_actor_transactions():
+    """
+    Fetch the transactions of the currently connected actor
+    """
     get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
     response = requests.get(get_chain_address)
     if response.status_code == 200:
@@ -521,6 +569,9 @@ def fetch_current_actor_transactions():
         return sorted(transactions_actor, key=lambda k: k['timestamp'], reverse=True)
 
 def fetch_batch_transactions(batch_id):
+    """
+    Fetch the transactions of a batch using his id
+    """
     get_chain_address = "{}chain".format(CONNECTED_NODE_ADDRESS)
     response = requests.get(get_chain_address)
     if response.status_code == 200:
