@@ -7,8 +7,9 @@ import os, shutil
 def make_shell_context():
     return {'db': db, 'Actor': Actor, 'Medicine': Medicine}
 
-
 if __name__ == '__main__':
+
+    # code to read and interpret a datamatrix
     folder = 'app/static/img/datamatrix'
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)

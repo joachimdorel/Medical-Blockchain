@@ -7,6 +7,14 @@ from uuid import uuid4
 import requests
 from flask import Flask, jsonify, request, url_for
 
+'''
+Object block of the blockchain, composed of:
+ - an index
+ - a list of transactions
+ - a timetstamp
+ - the previous block's hash
+ - a nonce
+'''
 class Block:
     def __init__(self, index, transactions, timestamp, previous_hash, nonce=0):
         self.index = index
