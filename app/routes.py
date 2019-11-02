@@ -3,7 +3,8 @@ import json
 
 from hubarcode.datamatrix import DataMatrixEncoder
 import requests
-import re
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 from flask import render_template, redirect, request, flash, url_for
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, MedicineForm, BatchForm

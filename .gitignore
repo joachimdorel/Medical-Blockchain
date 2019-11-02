@@ -6,3 +6,4 @@ venv/
 app.db
 __pycache__/
 .idea/
+requirements.in
