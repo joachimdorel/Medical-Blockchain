@@ -26,7 +26,7 @@ flask run
 
 Alternatively, the blockchain can run on any port with (here to run it on port 5001):
 ```bash
-flask run -p 8001
+flask run -p 5001
 ```
 
 From another terminal, you now need to launch the client of the blockchain:
@@ -39,7 +39,7 @@ python run_app.py
 
 Alternatively, the client can run on any port with (here to run it on port 8001):
 ```bash
-python run_app.py -p 5001
+python run_app.py -p 8001
 ```
 
 ## License
